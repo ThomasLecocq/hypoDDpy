@@ -9,6 +9,7 @@ from obspy.core.event import Catalog, Comment, Origin, readEvents, \
     ResourceIdentifier
 from obspy.signal import xcorrPickCorrection
 from obspy.xseed import Parser
+from obspy import read_inventory
 import os
 import progressbar
 import shutil
@@ -266,20 +267,16 @@ class HypoDDRelocator(object):
         self.log("Parsing stations...")
         self.stations = {}
         for station_file in self.station_files:
-            p = Parser(station_file)
-            # In theory it would be enough to parse Blockette 50, put faulty
-            # SEED files do not store enough information in them, so
-            # blockettes 52 need to be parsed...
-            for station in p.stations:
-                for blockette in station:
-                    if blockette.id != 52:
-                        continue
-                    station_id = "%s.%s" % (station[0].network_code,
-                                            station[0].station_call_letters)
+            p  = read_inventory(station_file,format='STATIONXML')
+            for network in p.networks:
+                for station in network.stations:
+                    print station
+                    station_id = "%s" % (station.code,
+                                            )
                     self.stations[station_id] = {
-                        "latitude": blockette.latitude,
-                        "longitude": blockette.longitude,
-                        "elevation": int(round(blockette.elevation))}
+                        "latitude": station.latitude,
+                        "longitude": station.longitude,
+                        "elevation": int(round(station.elevation))}
         with open(serialized_station_file, "w") as open_file:
             json.dump(self.stations, open_file)
         self.log("Done parsing stations.")
