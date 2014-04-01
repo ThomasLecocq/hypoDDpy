@@ -3,8 +3,8 @@
 This a collection of tools to run
 [HypoDD](http://www.ldeo.columbia.edu/~felixw/hypoDD.html) by Felix Waldhauser.
 
-It takes event files in the QuakeML format, station data in the SEED format and
-waveform data in any format ObsPy can read and does all the rest.
+It takes event files in the QuakeML format, station data in the stationXML
+format and waveform data in any format ObsPy can read and does all the rest.
 
 The output is one QuakeML file with the relocated events having one additional
 Origin node. The events that could not be relocated will not be changed.
@@ -81,3 +81,4 @@ relocator.setup_velocity_model(
 # Start the relocation with the desired output file.
 relocator.start_relocation(output_event_file="relocated_events.xml")
 ```
+

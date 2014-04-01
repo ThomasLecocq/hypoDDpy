@@ -118,10 +118,10 @@ class HypoDDRelocator(object):
         self._parse_station_files()
         self._write_station_input_file()
         self._read_event_information()
+        self._compile_hypodd()
         self._write_ph2dt_inp_file()
         self._create_event_id_map()
         self._write_catalog_input_file()
-        self._compile_hypodd()
         self._run_ph2dt()
         self._parse_waveform_files()
         self._cross_correlate_picks()
@@ -270,9 +270,7 @@ class HypoDDRelocator(object):
             p  = read_inventory(station_file,format='STATIONXML')
             for network in p.networks:
                 for station in network.stations:
-                    print station
-                    station_id = "%s" % (station.code,
-                                            )
+                    station_id = "%s.%s" % (network.code, station.code)
                     self.stations[station_id] = {
                         "latitude": station.latitude,
                         "longitude": station.longitude,
@@ -329,18 +327,18 @@ class HypoDDRelocator(object):
                                  second=float(event["origin_time"].second) +
                                  (float(event["origin_time"]
                                   .microsecond) / 1000.0),
-                                 latitude=event["origin_latitude"],
-                                 longitude=event["origin_longitude"],
+                                 latitude=float(event["origin_latitude"]),
+                                 longitude=float(event["origin_longitude"]),
                                  # QuakeML depth is in meters. Convert to km.
-                                 depth=event["origin_depth"] / 1000.0,
-                                 magnitude=event["magnitude"],
+                                 depth=float(event["origin_depth"]) / 1000.0,
+                                 magnitude=float(event["magnitude"]),
                                  horizontal_error=max(
-                                     [event["origin_latitude_error"],
-                                      event["origin_longitude_error"]]),
-                                 depth_error=event[
-                                     "origin_depth_error"] / 1000.0,
-                                 travel_time_residual=event[
-                                     "origin_time_error"],
+                                     [float(event["origin_latitude_error"]),
+                                      float(event["origin_longitude_error"])]),
+                                 depth_error=float(event[
+                                     "origin_depth_error"]) / 1000.0,
+                                 travel_time_residual=float(event[
+                                     "origin_time_error"]),
                                  event_id=self.event_map[event["event_id"]])
             event_strings.append(event_string)
             # Now loop over every pick and add station traveltimes.
@@ -407,7 +405,7 @@ class HypoDDRelocator(object):
         for event in catalog:
             current_event = {}
             self.events.append(current_event)
-            current_event["event_id"] = event.resource_id.resource_id
+            current_event["event_id"] = event.resource_id.id
             # Take the value from the first event.
             current_event["magnitude"] = event.magnitudes[0].mag
             # Always take the first origin.
@@ -460,6 +458,7 @@ class HypoDDRelocator(object):
                     discarded_picks += 0
                     continue
                 current_event["picks"].append(current_pick)
+        
         # Serialize the event dict. Copy it so the times can be converted to
         # strings.
         events = copy.deepcopy(self.events)
@@ -567,7 +566,8 @@ class HypoDDRelocator(object):
         ph2dt_string = [
             "station.dat",
             "phase.dat",
-            "{MINWGHT} {MAXDIST} {MAXSEP} {MAXNGH} {MINLNK} {MINOBS} {MAXOBS}"]
+            "{MINWGHT:.1f} {MAXDIST:.1f} {MAXSEP:.1f} {MAXNGH} {MINLNK} {MINOBS} {MAXOBS}",
+            ""]
         ph2dt_string = "\n".join(ph2dt_string)
         ph2dt_string = ph2dt_string.format(**values)
         with open(ph2dt_inp_file, "w") as open_file:
