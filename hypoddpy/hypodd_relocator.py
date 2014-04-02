@@ -295,9 +295,10 @@ class HypoDDRelocator(object):
         for key, value in self.stations.iteritems():
             station_strings.append("%s %.6f %.6f %i" % (key, value["latitude"],
                 value["longitude"], value["elevation"]))
-        station_string = "\n".join(station_strings)
+        station_string = "\n".join(station_strings)+"\n"
         with open(station_dat_file, "w") as open_file:
             open_file.write(station_string)
+        
         self.log("Created station.dat input file.")
 
     def _write_catalog_input_file(self):
@@ -531,9 +532,9 @@ class HypoDDRelocator(object):
         # set_forced_configuration_value method for the reasoning.
         values = {}
         values["MINWGHT"] = 0.0
-        values["MAXNGH"] = 10
-        values["MINLNK"] = 8
-        values["MINOBS"] = 8
+        values["MAXNGH"] = 20
+        values["MINLNK"] = 6
+        values["MINOBS"] = 6
         values["MAXOBS"] = 50
         if "MAXSEP" not in self.forced_configuration_values:
             # Set MAXSEP to the 10-percentile of all inter-event distances.
